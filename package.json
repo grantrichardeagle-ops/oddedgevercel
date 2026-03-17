@@ -1,0 +1,9 @@
+{
+  "name": "oddsedge",
+  "version": "1.0.0",
+  "description": "Live sports betting odds comparison dashboard",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
