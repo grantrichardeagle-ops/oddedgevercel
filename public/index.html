@@ -31,6 +31,10 @@
   .btn{background:none;border:1px solid var(--accent);color:var(--accent);padding:7px 14px;font-family:'Space Mono',monospace;font-size:0.63rem;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
   .btn:hover{background:rgba(0,255,136,.1);}
   .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 12px;font-family:'Space Mono',monospace;font-size:.58rem;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+  .btn-ghost:hover{border-color:var(--accent2);color:var(--accent2);}
+  .saved-key-badge{font-size:.58rem;color:var(--accent);border:1px solid rgba(0,255,136,.25);background:rgba(0,255,136,.06);padding:4px 10px;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+  .saved-key-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
   .pill{font-size:.58rem;padding:4px 10px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;border:1px solid;}
   .p-idle{border-color:var(--border);color:var(--muted);background:rgba(90,90,128,.08);}
   .p-live{border-color:rgba(0,255,136,.4);color:var(--accent);background:rgba(0,255,136,.08);}
@@ -182,8 +186,9 @@
 
   .clickable-cell{cursor:pointer!important;}
   .clickable-cell:hover{background:rgba(0,255,136,.12)!important;outline:1px solid rgba(0,255,136,.3);}
-  .book-link-hint{position:absolute;top:2px;left:3px;font-size:.45rem;color:var(--accent);opacity:0;transition:opacity .15s;}
-  .clickable-cell:hover .book-link-hint{opacity:1;}
+  .book-link-hint{display:block;font-size:.48rem;color:var(--accent);margin-top:3px;opacity:0.7;letter-spacing:.03em;}
+  .clickable-cell:hover .book-link-hint{opacity:1;color:var(--accent);text-decoration:underline;}
+  .clickable-cell:hover{background:rgba(0,255,136,.1)!important;outline:1px solid rgba(0,255,136,.25);}
   .book-th{cursor:pointer!important;color:var(--accent)!important;}
   .book-th:hover{background:rgba(0,255,136,.08)!important;}
 </style>
@@ -195,8 +200,9 @@
     <div class="hi">
       <div class="logo">Odds<em>Edge</em> <small>CREDIT-SMART</small></div>
       <div class="hright">
-        <input class="api-inp" id="apiKey" type="password" placeholder="Paste Odds API key…" />
-        <button class="btn" id="fetchBtn" onclick="manualFetch()">Load Odds</button>
+        <div id="keyArea">
+          <!-- filled by JS: either saved-key badge or input+button -->
+        </div>
         <div class="pill p-idle" id="statusBadge">Idle</div>
       </div>
     </div>
@@ -459,7 +465,7 @@ function spendCredit(){sesCreds++;todayCreds++;localStorage.setItem(DAY_KEY,toda
 function onBudgetChange(){budget=parseInt(document.getElementById('budgetInp').value)||20;updateCreditUI();}
 
 async function doFetch(force=false){
-  const key=document.getElementById('apiKey').value.trim();
+  const key=getApiKey();
   if(!key){alert('Enter your Odds API key first.');return;}
   if(overBudget()){setStatus('paused');showGrid(`<div class="sbox"><div style="font-size:2rem;margin-bottom:12px">💰</div><h3>Daily Budget Reached</h3><p>You've used all ${budget} credits today. Raise your budget or wait for midnight.</p></div>`);renderCache();return;}
   if(!force&&isFresh(sport)){renderCache();syncStatus();return;}
@@ -473,6 +479,8 @@ async function doFetch(force=false){
     const r=res.headers.get('x-requests-remaining');
     if(r!==null)credRem=parseInt(r);
     spendCredit();
+    localStorage.setItem(KEY_STORAGE, key);
+    renderKeyArea();
     setCache(sport,data);
     const gs=el('gettingStarted');if(gs)gs.style.display='none';
     el('grid').style.display='';
@@ -565,9 +573,9 @@ function buildCard(game){
       const bookUrl=getBookUrl(b,sport);
       cells+=`<td class="${cls} htip${bookUrl?' clickable-cell':''}" ${bookUrl?`onclick="openBook('${b}','${sport}',event)" title="Open ${b}"`:''}>
         ${ev>=0?'<div class="evb">+EV</div>':''}
-        ${bookUrl?`<div class="book-link-hint">↗</div>`:''}
         <div class="oa">${fmt(o)}</div><div class="od">${dec.toFixed(2)}x</div>
         <div class="oi" style="color:${imp>tp?'var(--accent2)':'var(--muted)'}">${(imp*100).toFixed(1)}%</div>
+        ${bookUrl?`<div class="book-link-hint">↗ open</div>`:''}
         <div class="tip"><b>${b}·${short}</b><br>American:${fmt(o)}<br>Decimal:${dec.toFixed(3)}<br>Implied:${(imp*100).toFixed(2)}%<br>True:${(tp*100).toFixed(2)}%<br>EV/$100:${ev>=0?'+':''}$${(ev*100).toFixed(2)}<br><span style="color:var(--accent);font-size:.5rem">${bookUrl?'↗ Tap to open '+b:''}</span></div>
       </td>`;
     });
@@ -632,8 +640,73 @@ document.querySelectorAll('.stab').forEach(tab=>{
     else showGrid(`<div class="sbox"><h3>No Cache</h3><p>Click Load Odds to fetch ${SPORT_LABELS[sport]} odds.</p></div>`);
   });
 });
-el('apiKey').addEventListener('keydown',e=>{if(e.key==='Enter')manualFetch();});
+// ── Key persistence ───────────────────────────────────────────────
+const KEY_STORAGE = 'oe_apikey';
+
+function savedKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+
+function renderKeyArea() {
+  const area = el('keyArea');
+  const key = savedKey();
+  if (key) {
+    // Show badge with masked key + forget button
+    const masked = key.slice(0,4) + '••••••••' + key.slice(-4);
+    area.innerHTML = `
+      <div class="saved-key-badge"><div class="dot"></div>Key: ${masked}</div>
+      <button class="btn" id="fetchBtn" onclick="manualFetch()">Refresh</button>
+      <button class="btn-ghost" onclick="forgetKey()" title="Remove saved key">Forget</button>`;
+  } else {
+    // Show input + load button
+    area.innerHTML = `
+      <input class="api-inp" id="apiKey" type="password" placeholder="Paste Odds API key…" />
+      <button class="btn" id="fetchBtn" onclick="manualFetch()">Load Odds</button>`;
+    // Re-attach enter listener
+    const inp = el('apiKey');
+    if (inp) inp.addEventListener('keydown', e => { if(e.key==='Enter') manualFetch(); });
+  }
+}
+
+function forgetKey() {
+  if (!confirm('Remove your saved API key? You will need to re-enter it next time.')) return;
+  localStorage.removeItem(KEY_STORAGE);
+  renderKeyArea();
+  // Show welcome screen again
+  const gs = el('gettingStarted');
+  if (gs) gs.style.display = '';
+  const g = el('grid');
+  if (g) { g.style.display = 'none'; g.innerHTML = ''; }
+  setStatus('idle');
+}
+
+function getApiKey() {
+  // Try input field first, then localStorage
+  const inp = el('apiKey');
+  if (inp && inp.value.trim()) {
+    const k = inp.value.trim();
+    localStorage.setItem(KEY_STORAGE, k); // save on first use
+    return k;
+  }
+  return savedKey();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+renderKeyArea();
 updateCreditUI();
+
+// If we have a saved key, skip welcome screen but don't auto-fetch — user decides when to load
+if (savedKey()) {
+  const gs = el('gettingStarted');
+  if (gs) gs.style.display = 'none';
+  const g = el('grid');
+  if (g) {
+    g.style.display = '';
+    g.innerHTML = `<div class="sbox">
+      <div style="font-size:2rem;margin-bottom:12px">👋</div>
+      <h3>Welcome back</h3>
+      <p>Your API key is saved. Click <strong>Refresh</strong> whenever you want to load the latest odds.</p>
+    </div>`;
+  }
+}
 </script>
 </body>
 </html>
