@@ -179,6 +179,13 @@
     .gs-step-num{min-width:54px;font-size:1.3rem;padding:14px;}
   }
 
+
+  .clickable-cell{cursor:pointer!important;}
+  .clickable-cell:hover{background:rgba(0,255,136,.12)!important;outline:1px solid rgba(0,255,136,.3);}
+  .book-link-hint{position:absolute;top:2px;left:3px;font-size:.45rem;color:var(--accent);opacity:0;transition:opacity .15s;}
+  .clickable-cell:hover .book-link-hint{opacity:1;}
+  .book-th{cursor:pointer!important;color:var(--accent)!important;}
+  .book-th:hover{background:rgba(0,255,136,.08)!important;}
 </style>
 </head>
 <body>
@@ -337,6 +344,75 @@
 </footer>
 
 <script>
+
+// ── Sportsbook deep links ─────────────────────────────────────────
+// Structure: { appScheme, iosUniversal, androidUniversal, webFallback }
+// sportKey → path fragment appended to web/universal URLs
+const BOOK_LINKS = {
+  'DraftKings': {
+    web:     'https://sportsbook.draftkings.com/leagues/{sport}',
+    ios:     'https://sportsbook.draftkings.com/leagues/{sport}',   // universal link
+    android: 'https://sportsbook.draftkings.com/leagues/{sport}',
+  },
+  'FanDuel': {
+    web:     'https://sportsbook.fanduel.com/{sport}',
+    ios:     'https://sportsbook.fanduel.com/{sport}',
+    android: 'https://sportsbook.fanduel.com/{sport}',
+  },
+  'BetMGM': {
+    web:     'https://sports.betmgm.com/en/sports/{sport}',
+    ios:     'https://sports.betmgm.com/en/sports/{sport}',
+    android: 'https://sports.betmgm.com/en/sports/{sport}',
+  },
+  'Caesars': {
+    web:     'https://sportsbook.caesars.com/us/nj/bet/{sport}',
+    ios:     'https://sportsbook.caesars.com/us/nj/bet/{sport}',
+    android: 'https://sportsbook.caesars.com/us/nj/bet/{sport}',
+  },
+  'bet365': {
+    web:     'https://www.bet365.com/#/AS/{sport}',
+    ios:     'https://www.bet365.com/#/AS/{sport}',
+    android: 'https://www.bet365.com/#/AS/{sport}',
+  },
+  'Pinnacle': {
+    web:     'https://www.pinnacle.com/en/{sport}/matchups/',
+    ios:     'https://www.pinnacle.com/en/{sport}/matchups/',
+    android: 'https://www.pinnacle.com/en/{sport}/matchups/',
+  },
+  'Bovada': {
+    web:     'https://www.bovada.lv/sports/{sport}',
+    ios:     'https://www.bovada.lv/sports/{sport}',
+    android: 'https://www.bovada.lv/sports/{sport}',
+  },
+};
+
+// Map sport API keys → URL-friendly sport slugs per book
+const SPORT_SLUGS = {
+  basketball_nba:          { DraftKings:'nba', FanDuel:'nba', BetMGM:'basketball/nba', Caesars:'basketball/nba', bet365:'48242498', Pinnacle:'basketball', Bovada:'basketball/nba' },
+  americanfootball_nfl:    { DraftKings:'nfl', FanDuel:'nfl', BetMGM:'football/nfl',   Caesars:'football/nfl',   bet365:'48242496', Pinnacle:'football',   Bovada:'football/nfl'  },
+  baseball_mlb:            { DraftKings:'mlb', FanDuel:'mlb', BetMGM:'baseball/mlb',   Caesars:'baseball/mlb',   bet365:'48242499', Pinnacle:'baseball',   Bovada:'baseball/mlb'  },
+  icehockey_nhl:           { DraftKings:'nhl', FanDuel:'nhl', BetMGM:'hockey/nhl',     Caesars:'hockey/nhl',     bet365:'48242502', Pinnacle:'hockey',     Bovada:'hockey/nhl'    },
+  mma_mixed_martial_arts:  { DraftKings:'mma', FanDuel:'mma', BetMGM:'mma',            Caesars:'mma',            bet365:'48242508', Pinnacle:'mma',        Bovada:'mma'           },
+  soccer_epl:              { DraftKings:'soccer/epl', FanDuel:'soccer', BetMGM:'soccer/england/premier-league', Caesars:'soccer/england/premier-league', bet365:'48242511', Pinnacle:'soccer', Bovada:'soccer/england-premier-league' },
+};
+
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+function getBookUrl(bookTitle, sportKey) {
+  const links = BOOK_LINKS[bookTitle];
+  if (!links) return null;
+  const slugs = SPORT_SLUGS[sportKey] || {};
+  const slug = slugs[bookTitle] || '';
+  const base = isMobile ? links.ios : links.web;
+  return base.replace('{sport}', slug);
+}
+
+function openBook(bookTitle, sportKey, event) {
+  event.stopPropagation();
+  const url = getBookUrl(bookTitle, sportKey);
+  if (url) window.open(url, '_blank', 'noopener');
+}
+
 // Points to the Vercel serverless function — works identically in dev and production
 const PROXY = '/api/odds';
 
@@ -486,10 +562,13 @@ function buildCard(game){
     books.forEach(b=>{
       const o=bo[b][side],imp=ai(o),dec=ad(o),ev=EV(o,tp);
       const cls=o===bO?'cbest':o===wO?'cworst':'';
-      cells+=`<td class="${cls} htip">${ev>=0?'<div class="evb">+EV</div>':''}
+      const bookUrl=getBookUrl(b,sport);
+      cells+=`<td class="${cls} htip${bookUrl?' clickable-cell':''}" ${bookUrl?`onclick="openBook('${b}','${sport}',event)" title="Open ${b}"`:''}>
+        ${ev>=0?'<div class="evb">+EV</div>':''}
+        ${bookUrl?`<div class="book-link-hint">↗</div>`:''}
         <div class="oa">${fmt(o)}</div><div class="od">${dec.toFixed(2)}x</div>
         <div class="oi" style="color:${imp>tp?'var(--accent2)':'var(--muted)'}">${(imp*100).toFixed(1)}%</div>
-        <div class="tip"><b>${b}·${short}</b><br>American:${fmt(o)}<br>Decimal:${dec.toFixed(3)}<br>Implied:${(imp*100).toFixed(2)}%<br>True:${(tp*100).toFixed(2)}%<br>EV/$100:${ev>=0?'+':''}$${(ev*100).toFixed(2)}</div>
+        <div class="tip"><b>${b}·${short}</b><br>American:${fmt(o)}<br>Decimal:${dec.toFixed(3)}<br>Implied:${(imp*100).toFixed(2)}%<br>True:${(tp*100).toFixed(2)}%<br>EV/$100:${ev>=0?'+':''}$${(ev*100).toFixed(2)}<br><span style="color:var(--accent);font-size:.5rem">${bookUrl?'↗ Tap to open '+b:''}</span></div>
       </td>`;
     });
     return `<tr>${cells}</tr>`;
@@ -507,7 +586,7 @@ function buildCard(game){
       <span class="wppct rd">${(tpH*100).toFixed(0)}%</span><span class="wplbl">${aS}←→${hS}</span>
     </div>
     <div class="oscroll"><table class="otable">
-      <thead><tr><th>TEAM</th>${books.map(b=>`<th>${b}</th>`).join('')}</tr></thead>
+      <thead><tr><th>TEAM</th>${books.map(b=>{const u=getBookUrl(b,sport);return`<th class="${u?'clickable-cell':''} book-th" ${u?`onclick="openBook('${b}','${sport}',event)" title="Open ${b}"`:''}>${b}${u?' ↗':''}</th>`;}).join('')}</tr></thead>
       <tbody>${row('away',tpA,aS)}${row('home',tpH,hS)}${vigRow}</tbody>
     </table></div>
     <button class="exbtn" onclick="toggleCard(this)">▲ Collapse</button>
