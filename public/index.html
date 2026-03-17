@@ -150,6 +150,35 @@
     .bv{text-align:center;}
     .api-inp{width:150px;}
   }
+
+  /* Getting Started Guide */
+  .gs-wrap{padding:28px 0 8px;}
+  .gs-hero{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:20px 24px;background:var(--surface);border:1px solid var(--border);}
+  .gs-icon{font-size:2rem;flex-shrink:0;}
+  .gs-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:5px;}
+  .gs-sub{font-size:.63rem;color:var(--muted);line-height:1.7;}
+  .gs-steps{display:flex;flex-direction:column;gap:2px;margin-bottom:2px;}
+  .gs-step{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);overflow:hidden;}
+  .gs-step-num{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--border);padding:20px 22px;background:var(--surface2);min-width:80px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-right:1px solid var(--border);}
+  .gs-step:hover .gs-step-num{color:var(--accent3);}
+  .gs-step-body{padding:18px 22px;}
+  .gs-step-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;margin-bottom:7px;color:var(--text);}
+  .gs-step-desc{font-size:.62rem;color:var(--muted);line-height:1.8;}
+  .gs-link{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(0,255,136,.3);}
+  .gs-link:hover{border-bottom-color:var(--accent);}
+  .gs-code{background:var(--surface2);border:1px solid var(--border);padding:2px 8px;font-size:.6rem;color:var(--accent3);letter-spacing:.04em;}
+  .gs-credits-explainer{background:var(--surface);border:1px solid var(--border);margin-top:2px;padding:20px 24px;}
+  .gs-ce-title{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;}
+  .gs-ce-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:14px;}
+  .gs-ce-item{background:var(--surface2);padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+  .gs-ce-num{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;line-height:1;}
+  .gs-ce-lbl{font-size:.54rem;color:var(--muted);}
+  .gs-ce-tip{font-size:.6rem;color:var(--muted);line-height:1.8;border-top:1px solid var(--border);padding-top:12px;}
+  @media(max-width:600px){
+    .gs-ce-grid{grid-template-columns:repeat(2,1fr);}
+    .gs-step-num{min-width:54px;font-size:1.3rem;padding:14px;}
+  }
+
 </style>
 </head>
 <body>
@@ -248,13 +277,57 @@
     </div>
   </div>
 
-  <div id="grid">
-    <div class="sbox">
-      <div style="font-size:2.2rem;margin-bottom:14px">🎯</div>
-      <h3>Paste your API key to begin</h3>
-      <p>Enter your Odds API key above and click <strong>Load Odds</strong>.</p>
+  <!-- Getting Started Guide -->
+  <div id="gettingStarted">
+    <div class="gs-wrap">
+
+      <div class="gs-hero">
+        <div class="gs-icon">🎯</div>
+        <div>
+          <div class="gs-title">Welcome to OddsEdge</div>
+          <div class="gs-sub">Live odds comparison across DraftKings, FanDuel, BetMGM, Caesars &amp; more — with real-time expected value analysis built in.</div>
+        </div>
+      </div>
+
+      <div class="gs-steps">
+        <div class="gs-step">
+          <div class="gs-step-num">01</div>
+          <div class="gs-step-body">
+            <div class="gs-step-title">Create a free account at The Odds API</div>
+            <div class="gs-step-desc">Go to <a href="https://the-odds-api.com" target="_blank" class="gs-link">the-odds-api.com</a> and click <strong>Get API Key</strong>. Enter your email and select the <strong>Starter (Free)</strong> plan — no credit card required. You get <strong>500 free credits per month</strong>.</div>
+          </div>
+        </div>
+        <div class="gs-step">
+          <div class="gs-step-num">02</div>
+          <div class="gs-step-body">
+            <div class="gs-step-title">Find your API key in the confirmation email</div>
+            <div class="gs-step-desc">The Odds API will email you a key that looks like: <span class="gs-code">a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6</span>. It's a long string of random letters and numbers. Copy the entire thing — you only need to do this once.</div>
+          </div>
+        </div>
+        <div class="gs-step">
+          <div class="gs-step-num">03</div>
+          <div class="gs-step-body">
+            <div class="gs-step-title">Paste it above and click Load Odds</div>
+            <div class="gs-step-desc">Paste your key into the field in the top-right corner and click <strong>Load Odds</strong> (or press Enter). Live odds from all major sportsbooks will appear instantly. Your key stays in your browser only — it is never stored on any server.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gs-credits-explainer">
+        <div class="gs-ce-title">💡 How credits work</div>
+        <div class="gs-ce-grid">
+          <div class="gs-ce-item"><span class="gs-ce-num gn">500</span><span class="gs-ce-lbl">Free credits / month</span></div>
+          <div class="gs-ce-item"><span class="gs-ce-num yw">1</span><span class="gs-ce-lbl">Credit per refresh</span></div>
+          <div class="gs-ce-item"><span class="gs-ce-num bl">~16</span><span class="gs-ce-lbl">Refreshes / day on free plan</span></div>
+          <div class="gs-ce-item"><span class="gs-ce-num rd">$0</span><span class="gs-ce-lbl">Cost to start</span></div>
+        </div>
+        <div class="gs-ce-tip">OddsEdge has a built-in credit manager — set a daily budget and refresh interval to stay within your limit. The app also pauses automatically when you switch tabs so no credits are ever wasted while you're away.</div>
+      </div>
+
     </div>
   </div>
+
+  <div id="grid" style="display:none"></div>
 </div>
 
 <footer>
@@ -325,6 +398,8 @@ async function doFetch(force=false){
     if(r!==null)credRem=parseInt(r);
     spendCredit();
     setCache(sport,data);
+    const gs=el('gettingStarted');if(gs)gs.style.display='none';
+    el('grid').style.display='';
     renderCache();updateStats(data);setStatus('live');
     document.getElementById('cpanel').style.display='';
     updateCreditUI();startAgeTimer();
@@ -460,7 +535,7 @@ function EV(o,p){const d=ad(o);return p*(d-1)-(1-p)*1;}
 function noVig(oA,oB){const iA=ai(oA),iB=ai(oB),t=iA+iB;return{probA:iA/t,probB:iB/t};}
 function fmtTime(iso){return new Date(iso).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});}
 function el(id){return document.getElementById(id);}
-function showGrid(html){el('grid').innerHTML=html;}
+function showGrid(html){const g=el('grid');g.style.display='';g.innerHTML=html;const gs=el('gettingStarted');if(gs)gs.style.display='none';}
 function hasEV(g){const bo={};(g.bookmakers||[]).forEach(bk=>{const h2h=(bk.markets||[]).find(m=>m.key==='h2h');if(!h2h)return;const hO=h2h.outcomes.find(o=>o.name===g.home_team),aO=h2h.outcomes.find(o=>o.name===g.away_team);if(hO&&aO)bo[bk.title]={home:hO.price,away:aO.price};});const bks=Object.keys(bo);if(!bks.length)return false;const{probA,probB}=noVig(Math.max(...bks.map(b=>bo[b].away)),Math.max(...bks.map(b=>bo[b].home)));return bks.some(b=>EV(bo[b].home,probB)>0||EV(bo[b].away,probA)>0);}
 function lineGap(g){const bo={};(g.bookmakers||[]).forEach(bk=>{const h2h=(bk.markets||[]).find(m=>m.key==='h2h');if(!h2h)return;const hO=h2h.outcomes.find(o=>o.name===g.home_team),aO=h2h.outcomes.find(o=>o.name===g.away_team);if(hO&&aO)bo[bk.title]={home:hO.price,away:aO.price};});const bks=Object.keys(bo);if(!bks.length)return 0;return Math.max(Math.max(...bks.map(b=>bo[b].home))-Math.min(...bks.map(b=>bo[b].home)),Math.max(...bks.map(b=>bo[b].away))-Math.min(...bks.map(b=>bo[b].away)));}
 function setStatus(s){const b=el('statusBadge');const m={idle:['p-idle','Idle'],live:['p-live','● Live'],stale:['p-stale','⚠ Stale'],loading:['p-loading pulse','Loading…'],error:['p-error','Error'],paused:['p-paused','⏸ Paused']};const[c,t]=m[s]||m.idle;b.className='pill '+c;b.textContent=t;}
